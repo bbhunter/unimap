@@ -13,16 +13,16 @@ readme = "README.md"
 
 [dependencies]
 trust-dns-resolver = "0.20.4"
-rayon = "1.7.0"
-log = { version = "0.4.20", features = ["std"] }
-colored = { version = "2.0.4", optional = true }
+rayon = "1.10.0"
+log = { version = "0.4.27", features = ["std"] }
+colored = { version = "2.2.0", optional = true }
 rand = "0.8.5"
-lazy_static = "1.4.0"
-serde = { version = "1.0.186", features = ["derive"] }
-serde_derive = "1.0.186"
+lazy_static = "1.5.0"
+serde = { version = "1.0.219", features = ["derive"] }
+serde_derive = "1.0.219"
 prettytable-rs = "0.8.0"
 serde-xml-rs = "0.5.1"
-chrono = "0.4.26"
+chrono = "0.4.40"
 clap = { version = "2.34.0", features = ["yaml"] }
 config = { version = "0.11.0", features = [
     "yaml",
@@ -38,13 +38,13 @@ failure = "0.1.8"
 trust-dns-resolver = { git = "https://github.com/Findomain/trust-dns", package = "trust-dns-resolver", branch = "custombranch" }
 
 [target.arm-unknown-linux-gnueabihf.dependencies]
-openssl = { version = "0.10.56", features = ["vendored"] }
+openssl = { version = "0.10.72", features = ["vendored"] }
 
 [target.aarch64-unknown-linux-gnu.dependencies]
-openssl = { version = "0.10.56", features = ["vendored"] }
+openssl = { version = "0.10.72", features = ["vendored"] }
 
 [target.armv7-unknown-linux-gnueabihf.dependencies]
-openssl = { version = "0.10.56", features = ["vendored"] }
+openssl = { version = "0.10.72", features = ["vendored"] }
 
 [target.'cfg(windows)'.dependencies]
 atty = "0.2.14"
