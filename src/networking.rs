@@ -10,7 +10,7 @@ use {
 pub fn get_records(resolver: &Resolver, domain: &str) -> String {
     if let Ok(ips) = resolver.ipv4_lookup(domain) {
         ips.iter()
-            .map(|x| x.to_string())
+            .map(std::string::ToString::to_string)
             .next()
             .expect("Failed to get IPV4.")
     } else {

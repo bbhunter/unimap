@@ -21,10 +21,10 @@ impl Log for SimpleLogger {
     }
 
     fn log(&self, record: &Record) {
-        let target = if !record.target().is_empty() {
-            record.target()
-        } else {
+        let target = if record.target().is_empty() {
             record.module_path().unwrap_or_default()
+        } else {
+            record.target()
         };
         if target.contains("unimap") && self.enabled(record.metadata()) {
             let level_string = {

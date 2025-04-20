@@ -132,17 +132,17 @@ pub fn get_nmap_data(
     ];
 
     if !min_rate.is_empty() {
-        nmap_args.append(&mut vec!["--min-rate", &min_rate])
+        nmap_args.append(&mut vec!["--min-rate", &min_rate]);
     }
 
     if fast_scan {
-        nmap_args.append(&mut vec!["--host-timeout", "20m"])
+        nmap_args.append(&mut vec!["--host-timeout", "20m"]);
     } else {
-        nmap_args.append(&mut vec!["-sV"])
+        nmap_args.append(&mut vec!["-sV"]);
     }
 
     if !ports.is_empty() {
-        nmap_args.append(&mut vec!["-p", ports])
+        nmap_args.append(&mut vec!["-p", ports]);
     }
 
     nmap_args.push(host);
@@ -159,8 +159,7 @@ pub fn get_nmap_data(
         }
         Err(e) => {
             error!(
-                    "Error waiting command to finish for {}, continuing with remaining hosts. Description: {}",
-                    host, e
+                    "Error waiting command to finish for {host}, continuing with remaining hosts. Description: {e}"
                 );
             Ok(Nmaprun::default())
         }

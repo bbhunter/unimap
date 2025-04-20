@@ -3,6 +3,7 @@ use std::{
     io::{self, Read},
 };
 
+#[must_use]
 pub fn sanitize_target_string(target: String) -> String {
     target
         .replace("www.", "")

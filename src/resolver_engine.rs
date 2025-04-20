@@ -1,7 +1,7 @@
 use {
     crate::{
         args,
-        errors::*,
+        errors::Result,
         files, logic, networking,
         nmap::{self, Nmaprun},
         structs::{Args, ResolvData},
@@ -30,7 +30,7 @@ lazy_static! {
                 match r.parse::<Ipv4Addr>() {
                     Ok(ip) => resolver_ips.push(ip),
                     Err(e) => {
-                        error!("Error parsing the {} IP from resolvers file to IP address. Please check and try again. Error: {}\n", r, e);
+                        error!("Error parsing the {r} IP from resolvers file to IP address. Please check and try again. Error: {e}\n");
                         std::process::exit(1)
                     }
                 }
@@ -40,7 +40,7 @@ lazy_static! {
                 match r.parse::<Ipv4Addr>() {
                     Ok(ip) => resolver_ips.push(ip),
                     Err(e) => {
-                        error!("Error parsing the {} IP from resolvers file to IP address. Please check and try again. Error: {}\n", r, e);
+                        error!("Error parsing the {r} IP from resolvers file to IP address. Please check and try again. Error: {e}\n");
                         std::process::exit(1)
                     }
                 }
@@ -51,13 +51,16 @@ lazy_static! {
 }
 
 pub fn parallel_resolver_all(args: &mut Args) -> Result<()> {
-    files::check_full_path(&args.logs_dir);
+    if !files::check_full_path(&args.logs_dir) {
+        error!("The logs directory {} does not exist.\n", args.logs_dir);
+        std::process::exit(1)
+    }
 
     if !args.quiet_flag {
         info!(
             "Performing parallel resolution for {} targets with {} threads, it will take a while...\n",
             args.targets.len(), args.threads
-        )
+        );
     }
 
     let opts = ResolverOpts {
@@ -79,9 +82,9 @@ pub fn parallel_resolver_all(args: &mut Args) -> Result<()> {
        "SERVICES"
     ]);
     if args.raw_output && !args.quiet_flag {
-        println!("HOST,IP,PORT,SERVICE,VERSION,PRODUCT,OS,EXTRAINFO")
+        println!("HOST,IP,PORT,SERVICE,VERSION,PRODUCT,OS,EXTRAINFO");
     } else if args.url_output && !args.quiet_flag {
-        println!("HOST:IP")
+        println!("HOST:IP");
     }
     for (target, resolv_data) in &data {
         if !resolv_data.ip.is_empty() {
@@ -120,11 +123,11 @@ pub fn parallel_resolver_all(args: &mut Args) -> Result<()> {
                             .extrainfo
                             .clone()
                             .unwrap_or_else(|| "NULL".to_string())
-                    )
+                    );
                 }
             } else if args.url_output {
                 for port_data in &resolv_data.ports_data {
-                    println!("{}:{}", target, port_data.portid)
+                    println!("{}:{}", target, port_data.portid);
                 }
             } else {
                 let mut services_table = Table::new();
@@ -179,7 +182,7 @@ pub fn parallel_resolver_all(args: &mut Args) -> Result<()> {
         error!(
             "An error occurred while writing the output file {}.\n",
             args.file_name
-        )
+        );
     }
     if !args.quiet_flag && !args.raw_output && !args.url_output {
         table.printstd();
@@ -206,7 +209,7 @@ fn parallel_resolver_engine(
     let resolv_data: HashMap<String, ResolvData> = targets
         .par_iter()
         .map(|target| {
-            let fqdn_target = format!("{}.", target);
+            let fqdn_target = format!("{target}.");
             let mut resolv_data = ResolvData::default();
             resolv_data.ip = networking::get_records(&resolver, &fqdn_target);
             (target.to_owned(), resolv_data)
@@ -227,10 +230,7 @@ fn parallel_resolver_engine(
     });
 
     if nmap_ips.is_empty() {
-        error!(
-            "No valid IPs found for scanning. IPs found: {:?}\n",
-            nmap_ips_orig
-        );
+        error!("No valid IPs found for scanning. IPs found: {nmap_ips_orig:?}\n");
         std::process::exit(1)
     } else {
         let nmap_data: HashMap<String, Nmaprun> = nmap_ips
@@ -254,7 +254,7 @@ fn parallel_resolver_engine(
                             .port
                             .retain(|f| f.state.state == "open");
                         if args.no_keep_nmap_logs && std::fs::remove_file(&filename).is_err() {
-                            error!("Error removing filename {}.", &filename)
+                            error!("Error removing filename {}.", &filename);
                         }
                         (ip.clone(), nmap_data)
                     }
@@ -268,7 +268,7 @@ fn parallel_resolver_engine(
 
         // Delete the args.logs_dir directory if it's empty
         if args.no_keep_nmap_logs && std::fs::remove_dir(&args.logs_dir).is_err() {
-            error!("Error removing directory {}.", &args.logs_dir)
+            error!("Error removing directory {}.", &args.logs_dir);
         }
 
         resolv_data

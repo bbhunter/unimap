@@ -1,5 +1,8 @@
 use {
-    crate::{errors::*, structs::Args},
+    crate::{
+        errors::{Result, ResultExt},
+        structs::Args,
+    },
     log::error,
     prettytable::Table,
     std::{
@@ -10,6 +13,7 @@ use {
     },
 };
 
+#[must_use]
 pub fn return_file_targets(args: &Args, mut files: Vec<String>) -> Vec<String> {
     let mut targets: Vec<String> = Vec::new();
     files.sort();
@@ -23,13 +27,10 @@ pub fn return_file_targets(args: &Args, mut files: Vec<String>) -> Vec<String> {
             }
             Err(e) => {
                 if args.files.len() == 1 {
-                    error!("Can not open file {}. Error: {}\n", f, e);
+                    error!("Can not open file {f}. Error: {e}\n");
                     std::process::exit(1)
                 } else if !args.quiet_flag {
-                    error!(
-                        "Can not open file {}, working with next file. Error: {}\n",
-                        f, e
-                    );
+                    error!("Can not open file {f}, working with next file. Error: {e}\n");
                 }
             }
         }
@@ -44,6 +45,7 @@ pub fn table_to_file(table: &Table, file_name: Option<std::fs::File>) -> Result<
     Ok(())
 }
 
+#[must_use]
 pub fn return_output_file(args: &Args) -> Option<File> {
     if args.file_name.is_empty() || !args.with_output {
         None
@@ -59,6 +61,7 @@ pub fn return_output_file(args: &Args) -> Option<File> {
     }
 }
 
+#[must_use]
 pub fn check_full_path(full_path: &str) -> bool {
     (Path::new(full_path).exists() && Path::new(full_path).is_dir())
         || fs::create_dir_all(full_path).is_ok()
@@ -68,7 +71,7 @@ pub fn delete_files(paths: &HashSet<String>) {
     for file in paths {
         if Path::new(&file).exists() {
             match std::fs::remove_file(file) {
-                Ok(_) => (),
+                Ok(()) => (),
                 Err(e) => error!("Error deleting the file {}. Description: {}", &file, e),
             }
         }
