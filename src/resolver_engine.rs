@@ -1,11 +1,12 @@
 use {
     crate::{
-        args,
+        args::ProcessedArgs,
         errors::Result,
         files, logic, networking,
         nmap::{self, Nmaprun},
-        structs::{Args, ResolvData},
+        structs::ResolvData,
     },
+    hickory_resolver::config::{LookupIpStrategy, ResolverOpts},
     log::{error, info},
     prettytable,
     prettytable::Table,
@@ -15,42 +16,35 @@ use {
         net::Ipv4Addr,
         time::Duration,
     },
-    trust_dns_resolver::{
-        config::{LookupIpStrategy, ResolverOpts},
-        Resolver,
-    },
 };
 
-lazy_static! {
-    pub static ref RESOLVERS: Vec<Ipv4Addr> = {
-        let args = args::get_args();
-        let mut resolver_ips = Vec::new();
-        if args.custom_resolvers {
-            for r in &files::return_file_targets(&args, args.resolvers.clone()) {
-                match r.parse::<Ipv4Addr>() {
-                    Ok(ip) => resolver_ips.push(ip),
-                    Err(e) => {
-                        error!("Error parsing the {r} IP from resolvers file to IP address. Please check and try again. Error: {e}\n");
-                        std::process::exit(1)
-                    }
-                }
-            }
-        } else {
-            for r in args.resolvers {
-                match r.parse::<Ipv4Addr>() {
-                    Ok(ip) => resolver_ips.push(ip),
-                    Err(e) => {
-                        error!("Error parsing the {r} IP from resolvers file to IP address. Please check and try again. Error: {e}\n");
-                        std::process::exit(1)
-                    }
+fn create_resolvers(args: &ProcessedArgs) -> Vec<Ipv4Addr> {
+    let mut resolver_ips = Vec::new();
+    if args.custom_resolvers {
+        for r in &files::return_file_targets(args, args.resolvers.clone()) {
+            match r.parse::<Ipv4Addr>() {
+                Ok(ip) => resolver_ips.push(ip),
+                Err(e) => {
+                    error!("Error parsing the {r} IP from resolvers file to IP address. Please check and try again. Error: {e}\n");
+                    std::process::exit(1)
                 }
             }
         }
-        resolver_ips
-    };
+    } else {
+        for r in &args.resolvers {
+            match r.parse::<Ipv4Addr>() {
+                Ok(ip) => resolver_ips.push(ip),
+                Err(e) => {
+                    error!("Error parsing the {r} IP from resolvers file to IP address. Please check and try again. Error: {e}\n");
+                    std::process::exit(1)
+                }
+            }
+        }
+    }
+    resolver_ips
 }
 
-pub fn parallel_resolver_all(args: &mut Args) -> Result<()> {
+pub fn parallel_resolver_all(args: &mut ProcessedArgs) -> Result<()> {
     if !files::check_full_path(&args.logs_dir) {
         error!("The logs directory {} does not exist.\n", args.logs_dir);
         std::process::exit(1)
@@ -63,16 +57,14 @@ pub fn parallel_resolver_all(args: &mut Args) -> Result<()> {
         );
     }
 
-    let opts = ResolverOpts {
-        timeout: Duration::from_secs(1),
-        ip_strategy: LookupIpStrategy::Ipv4Only,
-        num_concurrent_reqs: 1,
-        ..Default::default()
-    };
+    let mut opts = ResolverOpts::default();
+    opts.timeout = Duration::from_secs(1);
+    opts.ip_strategy = LookupIpStrategy::Ipv4Only;
+    opts.num_concurrent_reqs = 1;
 
     let resolver = networking::get_resolver(networking::return_socket_address(args), opts);
 
-    let data = parallel_resolver_engine(args, args.targets.clone(), resolver);
+    let data = parallel_resolver_engine(args, &args.targets, &resolver);
 
     let mut table = Table::new();
     table.set_titles(row![
@@ -202,19 +194,21 @@ pub fn parallel_resolver_all(args: &mut Args) -> Result<()> {
 }
 
 fn parallel_resolver_engine(
-    args: &Args,
-    targets: HashSet<String>,
-    resolver: Resolver,
+    args: &ProcessedArgs,
+    targets: &HashSet<String>,
+    resolver: &hickory_resolver::TokioResolver,
 ) -> HashMap<String, ResolvData> {
     let resolv_data: HashMap<String, ResolvData> = targets
         .par_iter()
         .map(|target| {
             let fqdn_target = format!("{target}.");
             let mut resolv_data = ResolvData::default();
-            resolv_data.ip = networking::get_records(&resolver, &fqdn_target);
+            resolv_data.ip = networking::get_records(resolver, &fqdn_target);
             (target.to_owned(), resolv_data)
         })
         .collect();
+
+    let resolvers = create_resolvers(args);
 
     let mut nmap_ips: HashSet<String> = resolv_data
         .values()
@@ -243,6 +237,7 @@ fn parallel_resolver_engine(
                     &args.min_rate,
                     &args.ports,
                     args.fast_scan,
+                    &resolvers,
                 ) {
                     Ok(nmap_data) => {
                         nmap_data

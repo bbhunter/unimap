@@ -1,43 +1,43 @@
 use {
-    crate::{files, structs::Args},
-    std::{collections::HashSet, net::SocketAddr},
-    trust_dns_resolver::{
-        config::{NameServerConfig, NameServerConfigGroup, Protocol, ResolverConfig, ResolverOpts},
-        Resolver,
+    crate::{args::ProcessedArgs, files},
+    hickory_resolver::{
+        config::{NameServerConfig, NameServerConfigGroup, ResolverConfig, ResolverOpts},
+        name_server::TokioConnectionProvider,
+        proto::xfer::Protocol,
+        TokioResolver,
     },
+    std::{collections::HashSet, net::SocketAddr},
 };
 
-pub fn get_records(resolver: &Resolver, domain: &str) -> String {
-    if let Ok(ips) = resolver.ipv4_lookup(domain) {
-        ips.iter()
-            .map(std::string::ToString::to_string)
-            .next()
-            .expect("Failed to get IPV4.")
-    } else {
-        String::new()
-    }
+pub fn get_records(resolver: &TokioResolver, domain: &str) -> String {
+    futures::executor::block_on(resolver.ipv4_lookup(domain)).map_or_else(
+        |_| String::new(),
+        |ips| {
+            ips.iter()
+                .map(std::string::ToString::to_string)
+                .next()
+                .expect("Failed to get IPV4.")
+        },
+    )
 }
 
-pub fn get_resolver(nameserver_ips: HashSet<SocketAddr>, opts: ResolverOpts) -> Resolver {
-    let mut name_servers = NameServerConfigGroup::with_capacity(nameserver_ips.len() * 2);
-    name_servers.extend(nameserver_ips.into_iter().flat_map(|socket_addr| {
-        std::iter::once(NameServerConfig {
-            socket_addr,
-            protocol: Protocol::Udp,
-            tls_dns_name: None,
-            trust_nx_responses: false,
-        })
-        .chain(std::iter::once(NameServerConfig {
-            socket_addr,
-            protocol: Protocol::Tcp,
-            tls_dns_name: None,
-            trust_nx_responses: false,
-        }))
-    }));
-    Resolver::new(ResolverConfig::from_parts(None, vec![], name_servers), opts).unwrap()
+pub fn get_resolver(nameserver_ips: HashSet<SocketAddr>, opts: ResolverOpts) -> TokioResolver {
+    let mut name_servers = NameServerConfigGroup::with_capacity(nameserver_ips.len());
+    name_servers.extend(
+        nameserver_ips
+            .into_iter()
+            .map(|socket_addr| NameServerConfig::new(socket_addr, Protocol::Udp)),
+    );
+
+    TokioResolver::builder_with_config(
+        ResolverConfig::from_parts(None, vec![], name_servers),
+        TokioConnectionProvider::default(),
+    )
+    .with_options(opts)
+    .build()
 }
 
-pub fn return_socket_address(args: &Args) -> HashSet<SocketAddr> {
+pub fn return_socket_address(args: &ProcessedArgs) -> HashSet<SocketAddr> {
     let mut resolver_ips = HashSet::new();
     if args.custom_resolvers {
         for r in &files::return_file_targets(args, args.resolvers.clone()) {
