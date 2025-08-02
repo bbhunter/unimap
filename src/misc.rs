@@ -12,31 +12,6 @@ pub fn sanitize_target_string(target: String) -> String {
         .replace('/', "")
 }
 
-pub fn return_matches_vec(matches: &clap::ArgMatches, value: &str) -> Vec<String> {
-    if matches.is_present(value) {
-        matches
-            .values_of(value)
-            .unwrap()
-            .map(str::to_owned)
-            .collect()
-    } else {
-        Vec::new()
-    }
-}
-
-#[allow(dead_code)]
-pub fn return_matches_hashset(matches: &clap::ArgMatches, value: &str) -> HashSet<String> {
-    if matches.is_present(value) {
-        matches
-            .values_of(value)
-            .unwrap()
-            .map(str::to_owned)
-            .collect()
-    } else {
-        HashSet::new()
-    }
-}
-
 pub fn read_stdin() -> HashSet<String> {
     let mut buffer = String::new();
     let mut stdin = io::stdin();

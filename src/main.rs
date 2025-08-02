@@ -1,4 +1,5 @@
 use {
+    clap::Parser,
     log::{error, Level},
     std::{collections::HashSet, iter::FromIterator},
     unimap::{args, errors::Result, files::return_file_targets, logger, misc, resolver_engine},
@@ -10,7 +11,9 @@ fn run() -> Result<()> {
     } else {
         logger::init_with_level(Level::Info).unwrap();
     }
-    let mut arguments = args::get_args();
+
+    let mut arguments = args::Args::parse().into_processed_args();
+
     if !arguments.files.is_empty() {
         arguments.targets =
             HashSet::from_iter(return_file_targets(&arguments, arguments.files.clone()));

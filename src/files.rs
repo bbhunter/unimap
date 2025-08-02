@@ -1,7 +1,7 @@
 use {
     crate::{
+        args::ProcessedArgs,
         errors::{Result, ResultExt},
-        structs::Args,
     },
     log::error,
     prettytable::Table,
@@ -14,14 +14,17 @@ use {
 };
 
 #[must_use]
-pub fn return_file_targets(args: &Args, mut files: Vec<String>) -> Vec<String> {
+pub fn return_file_targets(args: &ProcessedArgs, mut files: Vec<String>) -> Vec<String> {
     let mut targets: Vec<String> = Vec::new();
     files.sort();
     files.dedup();
     for f in files {
         match File::open(&f) {
             Ok(file) => {
-                for target in BufReader::new(file).lines().flatten() {
+                for target in BufReader::new(file)
+                    .lines()
+                    .map_while(std::result::Result::ok)
+                {
                     targets.push(target);
                 }
             }
@@ -46,7 +49,7 @@ pub fn table_to_file(table: &Table, file_name: Option<std::fs::File>) -> Result<
 }
 
 #[must_use]
-pub fn return_output_file(args: &Args) -> Option<File> {
+pub fn return_output_file(args: &ProcessedArgs) -> Option<File> {
     if args.file_name.is_empty() || !args.with_output {
         None
     } else {
@@ -67,7 +70,7 @@ pub fn check_full_path(full_path: &str) -> bool {
         || fs::create_dir_all(full_path).is_ok()
 }
 
-pub fn delete_files(paths: &HashSet<String>) {
+pub fn delete_files<S: ::std::hash::BuildHasher>(paths: &HashSet<String, S>) {
     for file in paths {
         if Path::new(&file).exists() {
             match std::fs::remove_file(file) {
@@ -78,7 +81,7 @@ pub fn delete_files(paths: &HashSet<String>) {
     }
 }
 
-pub fn string_to_file(data: String, mut file: File) -> Result<()> {
+pub fn string_to_file(data: &str, mut file: File) -> Result<()> {
     file.write_all(data.as_bytes())?;
     Ok(())
 }

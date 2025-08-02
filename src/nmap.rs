@@ -1,17 +1,7 @@
 use {
-    crate::resolver_engine,
     log::error,
-    std::{path::Path, process::Command},
+    std::{net::Ipv4Addr, path::Path, process::Command},
 };
-
-lazy_static! {
-    static ref NMAP_DNS_RESOLVERS: String = resolver_engine::RESOLVERS
-        .clone()
-        .iter()
-        .map(ToString::to_string)
-        .collect::<Vec<String>>()
-        .join(",");
-}
 
 #[derive(Default, Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -114,12 +104,19 @@ pub fn get_nmap_data(
     min_rate: &str,
     ports: &str,
     fast_scan: bool,
+    resolvers: &[Ipv4Addr],
 ) -> Result<Nmaprun, serde_xml_rs::Error> {
     let min_rate = min_rate.to_string();
+    let nmap_dns_resolvers = resolvers
+        .iter()
+        .map(ToString::to_string)
+        .collect::<Vec<String>>()
+        .join(",");
+
     let mut nmap_args = vec![
         "nmap",
         "--dns-servers",
-        &NMAP_DNS_RESOLVERS,
+        &nmap_dns_resolvers,
         "-Pn",
         "-sS",
         "--open",
