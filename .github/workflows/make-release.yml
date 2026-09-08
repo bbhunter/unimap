@@ -184,3 +184,45 @@ jobs:
               $body $prerelease
           fi
 
+  docker:
+    name: Publish the Docker Hub image
+    needs: [release]
+    # A release published with GITHUB_TOKEN does not raise the `release` event,
+    # so the image has to be built from here rather than from a workflow
+    # listening for it. Only for stable tags: a beta must not move :latest.
+    if: startsWith(github.ref, 'refs/tags/') && !contains(github.ref_name, '-')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/download-artifact@v8
+        with:
+          path: artifacts
+
+      # The same static binaries that went into the release assets, placed
+      # where the Dockerfile picks them up by TARGETARCH.
+      - name: Stage the binaries
+        run: |
+          install -D -m 755 artifacts/unimap-linux/unimap        docker/bin/amd64/unimap
+          install -D -m 755 artifacts/unimap-aarch64-musl/unimap docker/bin/arm64/unimap
+          ls -l docker/bin/*/unimap
+
+      - uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+
+      # The Dockerfile installs nmap with apk, which runs under QEMU for arm64.
+      - uses: docker/setup-qemu-action@v4
+
+      - uses: docker/setup-buildx-action@v4
+
+      - uses: docker/build-push-action@v7
+        with:
+          context: docker
+          file: docker/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_HUB_USERNAME }}/unimap:latest
+            ${{ secrets.DOCKER_HUB_USERNAME }}/unimap:${{ github.ref_name }}

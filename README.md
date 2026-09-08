@@ -26,26 +26,17 @@ You need to have Rust (1.88 or newer) and Nmap installed in your computer, then 
 
 ## Docker support
 
-You have two options to install Unimap in a docker container.
-
-**Using Dockerhub (recommended):**
-
-```
-1. docker pull edu4rdshl/unimap:latest
-3. docker run -it --rm --name unimap unimap -t hackerone.com --fast-scan
-# Set alias in ~/.bashrc or ~/.zshrc for global use
-4. alias unimap='docker run -it --rm --name unimap unimap'
-```
-
-**Building the Docker image yourself:**
+The image `edu4rdshl/unimap` is published for `linux/amd64` and `linux/arm64`
+on every release, under `latest` and the release version:
 
 ```
-1. git clone https://github.com/Edu4rdSHL/unimap.git && cd unimap
-2. docker build --tag unimap .
-3. docker run -it --rm --name unimap unimap -t hackerone.com --fast-scan
-# Set alias in ~/.bashrc or ~/.zshrc for global use
-4. alias unimap='docker run -it --rm --name unimap unimap'
+docker pull edu4rdshl/unimap:latest
+docker run --rm edu4rdshl/unimap:latest -t hackerone.com --fast-scan
+# Keep the CSV and the Nmap XML files: mount a directory on /opt/unimap
+docker run --rm -v "$(pwd):/opt/unimap" edu4rdshl/unimap:latest -f targets.txt --fast-scan -u results.csv
 ```
+
+See [docker/README.md](docker/README.md) to build the image yourself.
 
 ## Using precompiled binaries
 

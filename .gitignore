@@ -4,3 +4,6 @@
 /unimap_logs
 /ghbinaries
 /unimap-log-*.csv
+
+# Binaries staged for the Docker build, never committed.
+docker/bin/

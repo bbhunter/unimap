@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Builds the Docker image and runs a few short real scans with it.
+# Builds the Docker image from a local static binary, the way the release
+# workflow does, and runs a few short real scans with it.
 # Usage: scripts/container-test.sh [image-tag]
 set -euo pipefail
 
@@ -9,11 +10,16 @@ TARGET="scanme.nmap.org"
 PORTS="22,80"
 TIMEOUT="${UNIMAP_TEST_TIMEOUT:-120}"
 DOCKER="${DOCKER:-docker}"
+MUSL_TARGET="x86_64-unknown-linux-musl"
 
 cd "$(dirname "$0")/.."
 
+echo "==> Building the static binary for $MUSL_TARGET"
+cargo build --release --locked --target "$MUSL_TARGET"
+install -D -m 755 "target/$MUSL_TARGET/release/unimap" docker/bin/amd64/unimap
+
 echo "==> Building image $IMAGE"
-"$DOCKER" build -q -t "$IMAGE" . >/dev/null
+"$DOCKER" build -q --platform linux/amd64 -f docker/Dockerfile -t "$IMAGE" docker/ >/dev/null
 
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
@@ -23,7 +29,7 @@ chmod 777 "$WORK"
 fail() { echo "FAIL: $*" >&2; exit 1; }
 
 run_unimap() {
-  timeout "$TIMEOUT" "$DOCKER" run --rm -i -v "$WORK:/work" -w /work "$IMAGE" "$@"
+  timeout "$TIMEOUT" "$DOCKER" run --rm -i -v "$WORK:/opt/unimap" "$IMAGE" "$@"
 }
 
 echo "==> 1/4 table output, single target, fast scan"
