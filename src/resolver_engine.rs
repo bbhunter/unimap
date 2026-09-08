@@ -25,14 +25,14 @@ pub fn parallel_resolver_all(args: &mut ProcessedArgs) -> Result<()> {
         );
     }
 
+    let resolver_ips = networking::resolver_ips(args)?;
+    let resolver = networking::build_resolver(&resolver_ips)?;
+
     // Fail before spending time on DNS when Nmap is not usable.
     match nmap::check_nmap_available() {
         Ok(version) => debug!("Using {version}"),
         Err(e) => bail!("{e}. Nmap must be installed and in the PATH."),
     }
-
-    let resolver_ips = networking::resolver_ips(args)?;
-    let resolver = networking::build_resolver(&resolver_ips)?;
 
     if !args.quiet_flag {
         info!(
