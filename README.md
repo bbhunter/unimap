@@ -26,7 +26,7 @@ You need to have Rust (1.88 or newer) and Nmap installed in your computer, then 
 
 ## Docker support
 
-You have two options to install Findomain in a docker container.
+You have two options to install Unimap in a docker container.
 
 **Using Dockerhub (recommended):**
 
@@ -81,6 +81,21 @@ git clone https://aur.archlinux.org/unimap.git && cd unimap && makepkg -si
 * The previously doesn't mean you can not use Unimap from your home, just adjust the number of `--threads` and `--min-rate` (being it the most important).
 * We do not wrap Nmap in any way or scan ports on our own, we use the right Nmap options to get the most performance, Nmap rocks and it's the fastest port scanner that currently exists.
 * We parse Nmap output data and give you more understandable output while also preventing you to scan the same IP several times, **it's our main goal** .
+
+# Development
+
+Run the unit and integration tests (no network, root or Nmap needed):
+
+```
+cargo test
+```
+
+Run a short end-to-end check that builds the Docker image and launches real scans
+against `scanme.nmap.org` (needs Docker and internet access):
+
+```
+scripts/container-test.sh
+```
 
 # Found a bug?
 Open an [issue](https://github.com/Edu4rdSHL/unimap).
