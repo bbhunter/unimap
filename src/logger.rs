@@ -1,16 +1,8 @@
-#[cfg(windows)]
-extern crate atty;
-extern crate chrono;
-#[cfg(feature = "colored")]
-extern crate colored;
-extern crate log;
-#[cfg(windows)]
-extern crate winapi;
-
 use chrono::Local;
 #[cfg(feature = "colored")]
-use colored::*;
+use colored::Colorize;
 use log::{Level, Log, Metadata, Record, SetLoggerError};
+
 struct SimpleLogger {
     level: Level,
 }
@@ -43,52 +35,26 @@ impl Log for SimpleLogger {
                     record.level().to_string()
                 }
             };
-            {
-                print!(
-                    "\n{} [{}] {}",
-                    Local::now().format("%Y-%m-%d %H:%M:%S,%3f"),
-                    level_string,
-                    record.args()
-                );
-            }
+            print!(
+                "\n{} [{}] {}",
+                Local::now().format("%Y-%m-%d %H:%M:%S,%3f"),
+                level_string,
+                record.args()
+            );
         }
     }
 
     fn flush(&self) {}
 }
 
-#[cfg(windows)]
-fn set_up_color_terminal() {
-    use atty::Stream;
-
-    if atty::is(Stream::Stdout) {
-        unsafe {
-            use winapi::um::consoleapi::*;
-            use winapi::um::handleapi::*;
-            use winapi::um::processenv::*;
-            use winapi::um::winbase::*;
-            use winapi::um::wincon::*;
-
-            let stdout = GetStdHandle(STD_OUTPUT_HANDLE);
-
-            if stdout == INVALID_HANDLE_VALUE {
-                return;
-            }
-
-            let mut mode: winapi::shared::minwindef::DWORD = 0;
-
-            if GetConsoleMode(stdout, &mut mode) == 0 {
-                return;
-            }
-
-            SetConsoleMode(stdout, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
-        }
-    }
-}
-
 pub fn init_with_level(level: Level) -> Result<(), SetLoggerError> {
     #[cfg(all(windows, feature = "colored"))]
-    set_up_color_terminal();
+    {
+        use std::io::IsTerminal;
+        if std::io::stdout().is_terminal() {
+            let _ = colored::control::set_virtual_terminal(true);
+        }
+    }
 
     let logger = SimpleLogger { level };
     log::set_boxed_logger(Box::new(logger))?;
@@ -100,15 +66,36 @@ pub fn init() -> Result<(), SetLoggerError> {
     init_with_level(Level::Trace)
 }
 
-pub fn init_by_env() {
-    match std::env::var("UNIMAP_LOG_LEVEL") {
-        Ok(x) => match x.to_lowercase().as_str() {
-            "trace" => init_with_level(log::Level::Trace).unwrap(),
-            "debug" => init_with_level(log::Level::Debug).unwrap(),
-            "info" => init_with_level(log::Level::Info).unwrap(),
-            "warn" => init_with_level(log::Level::Warn).unwrap(),
-            _ => init_with_level(log::Level::Error).unwrap(),
-        },
-        _ => init_with_level(log::Level::Error).unwrap(),
+/// Maps the `UNIMAP_LOG_LEVEL` environment variable value to a log level.
+/// Unknown or missing values fall back to `Error`.
+#[must_use]
+pub fn level_from_env_value(value: Option<&str>) -> Level {
+    match value.map(str::to_lowercase).as_deref() {
+        Some("trace") => Level::Trace,
+        Some("debug") => Level::Debug,
+        Some("info") => Level::Info,
+        Some("warn") => Level::Warn,
+        _ => Level::Error,
+    }
+}
+
+pub fn init_by_env() -> Result<(), SetLoggerError> {
+    let value = std::env::var("UNIMAP_LOG_LEVEL").ok();
+    init_with_level(level_from_env_value(value.as_deref()))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn env_levels() {
+        assert_eq!(level_from_env_value(Some("TRACE")), Level::Trace);
+        assert_eq!(level_from_env_value(Some("debug")), Level::Debug);
+        assert_eq!(level_from_env_value(Some("Info")), Level::Info);
+        assert_eq!(level_from_env_value(Some("warn")), Level::Warn);
+        assert_eq!(level_from_env_value(Some("error")), Level::Error);
+        assert_eq!(level_from_env_value(Some("bogus")), Level::Error);
+        assert_eq!(level_from_env_value(None), Level::Error);
     }
 }

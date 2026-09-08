@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE nmaprun>
+<?xml-stylesheet href="file:///usr/bin/../share/nmap/nmap.xsl" type="text/xsl"?>
+<!-- Nmap 7.991 scan initiated Mon Sep  7 03:15:16 2026 as: nmap -sT -Pn -&#45;open -dd -T4 -p 1-200 -oX fast.xml 127.0.0.1 -->
+<nmaprun scanner="nmap" args="nmap -sT -Pn -&#45;open -dd -T4 -p 1-200 -oX fast.xml 127.0.0.1" start="1788768916" startstr="Mon Sep  7 03:15:16 2026" version="7.991" xmloutputversion="1.05">
+<scaninfo type="connect" protocol="tcp" numservices="200" services="1-200"/>
+<verbose level="2"/>
+<debugging level="2"/>
+<taskbegin task="Parallel DNS resolution of 1 host." time="1788768916"/>
+<taskend task="Parallel DNS resolution of 1 host." time="1788768916"/>
+<taskbegin task="Connect Scan" time="1788768916"/>
+<taskend task="Connect Scan" time="1788768916" extrainfo="200 total ports"/>
+<runstats><finished time="1788768916" timestr="Mon Sep  7 03:15:16 2026" summary="Nmap done at Mon Sep  7 03:15:16 2026; 1 IP address (1 host up) scanned in 0.02 seconds" elapsed="0.02" exit="success"/><hosts up="1" down="0" total="1"/>
+</runstats>
+</nmaprun>

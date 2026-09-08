@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE nmaprun>
+<?xml-stylesheet href="file:///usr/bin/../share/nmap/nmap.xsl" type="text/xsl"?>
+<!-- Nmap 7.991 scan initiated Mon Sep  7 03:15:16 2026 as: nmap -sS -Pn -&#45;open -dd -T4 -p 22,80,443 -oX fast.xml 45.33.32.156 -->
+<nmaprun scanner="nmap" args="nmap -sS -Pn -&#45;open -dd -T4 -p 22,80,443 -oX fast.xml 45.33.32.156" start="1788768916" startstr="Mon Sep  7 03:15:16 2026" version="7.991" xmloutputversion="1.05">
+<scaninfo type="syn" protocol="tcp" numservices="3" services="22,80,443"/>
+<verbose level="2"/>
+<debugging level="2"/>
+<taskbegin task="Parallel DNS resolution of 1 host." time="1788768916"/>
+<taskend task="Parallel DNS resolution of 1 host." time="1788768916"/>
+<taskbegin task="SYN Stealth Scan" time="1788768916"/>
+<taskend task="SYN Stealth Scan" time="1788768916" extrainfo="3 total ports"/>
+<host starttime="1788768916" endtime="1788768917"><status state="up" reason="user-set" reason_ttl="0"/>
+<address addr="45.33.32.156" addrtype="ipv4"/>
+<address addr="00:11:22:33:44:55" addrtype="mac" vendor="Example"/>
+<hostnames>
+<hostname name="scanme.nmap.org" type="user"/>
+<hostname name="scanme.nmap.org" type="PTR"/>
+</hostnames>
+<ports><extraports state="filtered" count="1">
+<extrareasons reason="no-response" count="1" proto="tcp" ports="443"/>
+</extraports>
+<port protocol="tcp" portid="22"><state state="open" reason="syn-ack" reason_ttl="53"/><service name="ssh" method="table" conf="3"/></port>
+<port protocol="tcp" portid="80"><state state="open" reason="syn-ack" reason_ttl="53"/><service name="http" method="table" conf="3"/></port>
+<port protocol="tcp" portid="443"><state state="open|filtered" reason="no-response" reason_ttl="0"/><service name="https" method="table" conf="3"/></port>
+</ports>
+<times srtt="28" rttvar="2821" to="100000"/>
+</host>
+<runstats><finished time="1788768917" timestr="Mon Sep  7 03:15:17 2026" summary="Nmap done at Mon Sep  7 03:15:17 2026; 1 IP address (1 host up) scanned in 0.50 seconds" elapsed="0.50" exit="success"/><hosts up="1" down="0" total="1"/>
+</runstats>
+</nmaprun>

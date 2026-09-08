@@ -1,21 +1,11 @@
-#[macro_use]
-extern crate serde_derive;
-#[macro_use]
-extern crate lazy_static;
-#[macro_use]
-extern crate prettytable;
-
-extern crate log;
-
 pub mod args;
+pub mod defaults;
 pub mod errors;
 pub mod files;
 pub mod logger;
+pub mod logic;
 pub mod misc;
+pub mod networking;
+pub mod nmap;
 pub mod resolver_engine;
-
-mod defaults;
-mod logic;
-mod networking;
-mod nmap;
-mod structs;
+pub mod structs;

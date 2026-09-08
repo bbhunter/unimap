@@ -2,46 +2,33 @@
 name = "unimap"
 version = "0.7.0"
 authors = ["Eduard Tolosa <edu4rdshl@protonmail.com>"]
-edition = "2018"
+edition = "2024"
+rust-version = "1.88"
 description = "Scan only once by IP address and reduce scan times with Nmap for large amounts of data."
 repository = "https://github.com/edu4rdshl/unimap"
 license = "GPL-3.0-or-later"
 keywords = ["nmap", "scanning", "ip-scan", "scanner", "open-ports"]
 readme = "README.md"
+exclude = ["ghbinaries/", "unimap_logs/", ".vscode/", "builder.sh"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-hickory-resolver = "0.25.2"
-rayon = "1.10.0"
-log = { version = "0.4.27", features = ["std"] }
-colored = { version = "3.0.0", optional = true }
-rand = "0.9.2"
-lazy_static = "1.5.0"
-tokio = { version = "1.47.0", features = ["rt"] }
+hickory-resolver = { version = "0.26.2", default-features = false, features = ["tokio"] }
+rayon = "1.12.0"
+log = { version = "0.4.34", features = ["std"] }
+colored = { version = "3.1.1", optional = true }
+tokio = { version = "1.53.1", features = ["rt-multi-thread"] }
 futures = "0.3"
-serde = { version = "1.0.219", features = ["derive"] }
-serde_derive = "1.0.219"
+serde = { version = "1.0.229", features = ["derive"] }
 prettytable-rs = "0.10.0"
-serde-xml-rs = "0.8.1"
-chrono = "0.4.41"
-clap = { version = "4.5.42", features = ["derive"] }
-config = { version = "0.15.13", features = ["yaml", "json", "toml", "ini"] }
-failure = "0.1.8"
+serde-xml-rs = "0.8.2"
+chrono = "0.4.45"
+clap = { version = "4.6.6", features = ["derive"] }
+anyhow = "1.0.104"
 
-[target.arm-unknown-linux-gnueabihf.dependencies]
-openssl = { version = "0.10.73", features = ["vendored"] }
-
-[target.aarch64-unknown-linux-gnu.dependencies]
-openssl = { version = "0.10.73", features = ["vendored"] }
-
-[target.armv7-unknown-linux-gnueabihf.dependencies]
-openssl = { version = "0.10.73", features = ["vendored"] }
-
-[target.'cfg(windows)'.dependencies]
-atty = "0.2.14"
-winapi = { version = "0.3.9", features = ["handleapi", "winbase"] }
-
+[dev-dependencies]
+tempfile = "3"
 
 [profile.release]
 lto = true

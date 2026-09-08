@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE nmaprun>
+<?xml-stylesheet href="file:///usr/bin/../share/nmap/nmap.xsl" type="text/xsl"?>
+<!-- Nmap 7.991 scan initiated Mon Sep  7 03:15:16 2026 as: nmap -sT -Pn -&#45;open -dd -T4 -sV -p 22,80,631 -oX sv.xml 127.0.0.1 -->
+<nmaprun scanner="nmap" args="nmap -sT -Pn -&#45;open -dd -T4 -sV -p 22,80,631 -oX sv.xml 127.0.0.1" start="1788768916" startstr="Mon Sep  7 03:15:16 2026" version="7.991" xmloutputversion="1.05">
+<scaninfo type="connect" protocol="tcp" numservices="3" services="22,80,631"/>
+<verbose level="2"/>
+<debugging level="2"/>
+<taskbegin task="Parallel DNS resolution of 1 host." time="1788768916"/>
+<taskend task="Parallel DNS resolution of 1 host." time="1788768916"/>
+<taskbegin task="Connect Scan" time="1788768916"/>
+<taskend task="Connect Scan" time="1788768916" extrainfo="3 total ports"/>
+<taskbegin task="Service scan" time="1788768916"/>
+<taskend task="Service scan" time="1788768922" extrainfo="1 service on 1 host"/>
+<taskbegin task="NSE" time="1788768922"/>
+<taskend task="NSE" time="1788768922"/>
+<taskbegin task="NSE" time="1788768922"/>
+<taskend task="NSE" time="1788768922"/>
+<host starttime="1788768916" endtime="1788768922"><status state="up" reason="user-set" reason_ttl="0"/>
+<address addr="127.0.0.1" addrtype="ipv4"/>
+<hostnames>
+<hostname name="localhost" type="PTR"/>
+</hostnames>
+<ports><extraports state="closed" count="2">
+<extrareasons reason="conn-refused" count="2" proto="tcp" ports="22,80"/>
+</extraports>
+<port protocol="tcp" portid="631"><state state="open" reason="syn-ack" reason_ttl="0"/><service name="ipp" product="CUPS" version="2.4" method="probed" conf="10"><cpe>cpe:/a:apple:cups:2.4</cpe></service></port>
+</ports>
+<times srtt="28" rttvar="2821" to="100000"/>
+</host>
+<runstats><finished time="1788768922" timestr="Mon Sep  7 03:15:22 2026" summary="Nmap done at Mon Sep  7 03:15:22 2026; 1 IP address (1 host up) scanned in 6.14 seconds" elapsed="6.14" exit="success"/><hosts up="1" down="0" total="1"/>
+</runstats>
+</nmaprun>

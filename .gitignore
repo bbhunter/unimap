@@ -3,3 +3,4 @@
 *.txt
 /unimap_logs
 /ghbinaries
+/unimap-log-*.csv

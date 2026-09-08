@@ -11,7 +11,7 @@ Unimap uses its own technology to initially resolve the IP addresses of all subd
 
 ## From source
 
-You need to have Rust and Nmap installed in your computer, then run:
+You need to have Rust (1.88 or newer) and Nmap installed in your computer, then run:
 
 ```
 1. git clone https://github.com/Edu4rdSHL/unimap.git && cd unimap
