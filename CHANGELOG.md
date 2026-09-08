@@ -1,0 +1,54 @@
+# Changelog
+
+## 0.8.0
+
+### Fixed
+
+- Nmap XML parsing was broken since the upgrade to serde-xml-rs 0.8: every scan ended
+  with `missing field` errors. Attributes are now mapped correctly and the parser is
+  covered by tests using real Nmap output.
+- A target resolving to a private, loopback or otherwise non routable IP made the tool
+  panic. Those targets are now reported with their IP and no ports.
+- Using `--no-keep-nmap-logs` together with `-o` deleted the logs directory before the
+  CSV was written into it.
+- The `open` port filter was applied to a discarded copy, so `open|filtered` ports were
+  reported as open.
+- A missing `--resolvers` file was silently ignored, leaving the resolver without any
+  name server.
+- `--threads 0` is rejected instead of crashing the thread pool.
+- A leftover Nmap XML from a previous run was parsed as fresh data when the new scan
+  failed to write its output (for example when running without root after a run as
+  root). The stale file is removed before every scan and a non-zero Nmap exit status is
+  reported as a failure.
+- Appending several runs to the same CSV with `-u` wrote the header row every time.
+  The header is now written only when the file is empty.
+
+### Changed
+
+- DNS resolution runs on an async runtime with bounded concurrency instead of one
+  blocking thread per lookup. Lookups are retried once and never consult `/etc/hosts`.
+- Nmap availability is checked before resolving so a missing binary fails immediately,
+  and Nmap's own error message is shown when a scan produces no output (for example
+  when running without root).
+- Targets read from files or stdin are sanitized and validated like `-t` targets.
+  Invalid lines are skipped and counted.
+- Output rows are sorted by hostname, so results are deterministic between runs.
+- The "OPEN PORTS" column distinguishes a scan that found nothing (`NULL`) from a host
+  that was not scanned because its IP is not routable (`NOT SCANNED`) and from a host
+  whose Nmap run failed (`SCAN FAILED`), so a failure is never recorded as a clean result.
+- Edition 2024, Rust 1.88 or newer required.
+- Dependencies updated: hickory-resolver 0.26, clap 4.6, tokio 1.53. Removed the
+  unmaintained `failure`, `atty`, `winapi` and the unused `rand`, `config` and
+  `lazy_static` crates. `cargo audit` reports no advisories.
+
+### Added
+
+- Unit tests for argument processing, target validation, file handling, resolver
+  parsing and Nmap XML parsing, plus CLI integration tests.
+- `scripts/container-test.sh` builds the Docker image and runs real scans.
+- GitHub Actions workflow running fmt, clippy, tests, `cargo audit` and the container
+  check. The release and Docker Hub workflows were rewritten on current actions: the
+  deprecated `actions-rs` steps are gone, release binaries (including an Apple Silicon
+  build) are zipped with a sha512 and attached to the GitHub release, and the Docker
+  image is published for amd64 and arm64 with version tags.
+- Dockerfile updated to current Alpine and a locked release build.
